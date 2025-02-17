@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+    id 'io.qameta.allure' version '2.12.0'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    junitVersion = '5.11.4'
+    allureVersion = '2.29.1'
+}
+
+dependencies {
+    testImplementation platform("org.junit:junit-bom:${junitVersion}")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation "io.qameta.allure:allure-junit5:${allureVersion}"
+}
+
+
+test {
+    useJUnitPlatform{
+            systemProperty 'allure.results.directory', 'build/allure-results'
+    }
+}
