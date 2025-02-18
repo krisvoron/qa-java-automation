@@ -10,11 +10,15 @@ import java.util.stream.Stream;
 
 import static delivery.CargoDimension.LARGE;
 import static delivery.CargoDimension.SMALL;
-import static delivery.DeliveryWorkload.*;
+import static delivery.DeliveryWorkload.ELEVATED;
+import static delivery.DeliveryWorkload.HIGH;
+import static delivery.DeliveryWorkload.NORMAL;
+import static delivery.DeliveryWorkload.VERY_HIGH;
 import static delivery.ExceptionMessage.CARGO_DIMENSION_IS_NULL;
 import static delivery.ExceptionMessage.DELIVERY_WORKLOAD_IS_NULL;
-import static delivery.ExceptionMessage.DISTANCE_IS_NEGATIVE_NUMBER;
+import static delivery.ExceptionMessage.LONG_DISTANCE;
 import static delivery.ExceptionMessage.LONG_DISTANCE_FOR_FRAGILE_CARGO;
+import static delivery.ExceptionMessage.SHORT_DISTANCE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -38,13 +42,15 @@ public class CalculateDeliveryCostTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataNegative")
     @DisplayName("Check exception:")
-    void negativeTest(String checkTitle,
+    void negativeTest(String exceptionMessage,
             Class<? extends RuntimeException> exception,
                       int distance,
                       CargoDimension cargoDimension,
+                      boolean isFragile,
                       DeliveryWorkload deliveryWorkload) {
-        assertThrows(exception,
-                () -> CalculationDeliveryCost.getDeliveryCost(distance, cargoDimension, true, deliveryWorkload));
+        Exception actualException = assertThrows(exception,
+                () -> CalculationDeliveryCost.getDeliveryCost(distance, cargoDimension, isFragile, deliveryWorkload));
+        assertEquals(exceptionMessage, actualException.getMessage());
     }
 
     private static Stream<Arguments> testDataPositive() {
@@ -70,10 +76,12 @@ public class CalculateDeliveryCostTest {
 
     private static Stream<Arguments> testDataNegative() {
         return Stream.of(
-                Arguments.of(DISTANCE_IS_NEGATIVE_NUMBER, IllegalArgumentException.class, -1, LARGE, VERY_HIGH),
-                Arguments.of(CARGO_DIMENSION_IS_NULL, NullPointerException.class, 31, null, VERY_HIGH),
-                Arguments.of(DELIVERY_WORKLOAD_IS_NULL, NullPointerException.class, 31, SMALL, null),
-                Arguments.of(LONG_DISTANCE_FOR_FRAGILE_CARGO, IllegalArgumentException.class, 31, SMALL, VERY_HIGH)
+                Arguments.of(SHORT_DISTANCE, IllegalArgumentException.class, -1, LARGE, false, VERY_HIGH),
+                Arguments.of(SHORT_DISTANCE, IllegalArgumentException.class, 0, LARGE, false, VERY_HIGH),
+                Arguments.of(LONG_DISTANCE, IllegalArgumentException.class, 101, LARGE, false, VERY_HIGH),
+                Arguments.of(CARGO_DIMENSION_IS_NULL, NullPointerException.class, 31, null, false, VERY_HIGH),
+                Arguments.of(DELIVERY_WORKLOAD_IS_NULL, NullPointerException.class, 31, SMALL, false, null),
+                Arguments.of(LONG_DISTANCE_FOR_FRAGILE_CARGO, IllegalArgumentException.class, 31, SMALL, true, VERY_HIGH)
         );
     }
 }
